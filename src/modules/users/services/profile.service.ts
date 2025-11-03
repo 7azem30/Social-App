@@ -32,6 +32,8 @@ class profileService {
         );
         res.json(successResponse("Profile uploaded successfully", 200, user));
     }
+
+    
     uploadCoverPicture = async (req: IRequest, res: Response) => {
         const { user: { _id } } = req.loggedInUser!;
         const filePath = (req.file as Express.Multer.File)?.path;
@@ -54,6 +56,8 @@ class profileService {
         );
         res.json(successResponse("Cover uploaded successfully", 200, user));
     }
+
+    
     updateProfile = async (req: IRequest, res: Response) => {
         const { user: { _id } } = req.loggedInUser!
         const { firstName, lastName, age, gender, DOB, phoneNumber }: IUser = req.body;
@@ -76,6 +80,8 @@ class profileService {
 
         res.json(successResponse<IUser>('profile updated successfully', 200, updateUser))
     }
+
+    
     deleteAccount = async (req: IRequest, res: Response) => {
         const { user } = req.loggedInUser!
         if (user.profilePicture) await deleteFileFromCloudinary(user.profilePicture)
@@ -83,26 +89,23 @@ class profileService {
         await user.deleteOne()
         res.json(successResponse('Account deleted successfully', 200))
     }
-    getProfile = async (req: IRequest, res: Response) => {
-        const { user: { _id } } = req.loggedInUser!
-        const user = await this.userRepo.findDocumentById(_id)
-        if (!user) throw new badRequestException('User not found')
-        res.json(successResponse<IUser>('profile fetched successfully', 200, user))
-    }
+
+    
     listAllUser = async (req: Request, res: Response) => {
         const users = await this.userRepo.findDocuments()
         if (!users.length) throw new badRequestException("User not found ");
         res.json(successResponse<IUser[]>('profile fetched successfully', 200, users))
     }
 
-    sendFriendRequest = async (req: IRequest, res: Response) => {
-        const { user: { _id } } = req.loggedInUser!;
-        const { requestToId } = req.body;
-        const user = await this.userRepo.findDocumentById(requestToId)
-        if (!user) throw new badRequestException('User not found');
-        await this.friendShipRepo.createNewDocument({ requestFromId: _id, requestToId })
-        res.json(successResponse('Sent you a friend request', 200))
+    
+ getProfile = async (req: IRequest, res: Response) => {
+        const { user: { _id } } = req.loggedInUser!
+        const user = await this.userRepo.findDocumentById(_id)
+        if (!user) throw new badRequestException('User not found')
+        res.json(successResponse<IUser>('profile fetched successfully', 200, user))
     }
+
+        
     listRequests = async (req: IRequest, res: Response) => {
         const { user: { _id } } = req.loggedInUser!;
         const { status } = req.query;
@@ -127,6 +130,17 @@ class profileService {
         const groups = await this.conversationRepo.findDocuments({ type: 'group', members: { $in: { _id } } })
         res.json(successResponse(' friend requests', 200, { requests, groups }))
     }
+
+    
+sendFriendRequest = async (req: IRequest, res: Response) => {
+        const { user: { _id } } = req.loggedInUser!;
+        const { requestToId } = req.body;
+        const user = await this.userRepo.findDocumentById(requestToId)
+        if (!user) throw new badRequestException('User not found');
+        await this.friendShipRepo.createNewDocument({ requestFromId: _id, requestToId })
+        res.json(successResponse('Sent you a friend request', 200))
+    }
+    
     respondToFriendShipRequest = async (req: IRequest, res: Response) => {
         const { user: { _id } } = req.loggedInUser!
         const { friendRequestId, response } = req.body;
@@ -138,6 +152,8 @@ class profileService {
 
         res.json(successResponse<IFriendShip>(' friend requests', 200, friendRequest))
     }
+
+    
     createGroup = async (req: IRequest, res: Response) => {
         const { user: { _id } } = req.loggedInUser!
         const { name, memberIds } = req.body;
@@ -158,6 +174,8 @@ class profileService {
         })
         res.json(successResponse('Group created successfully', 200, group))
     }
+
+    
     updateSendEmailOtp = async (req: IRequest, res: Response) => {
         const { user } = req.loggedInUser!
         const { newEmail } = req.body;
@@ -182,7 +200,10 @@ class profileService {
 
         res.json(successResponse('Otp sent to your new email', 200))
     }
-    updatePassword = async (req: IRequest, res: Response) => {
+
+    
+    updatePassword = async (req: IRequest, res: Response) => 
+        {
         const { user } = req.loggedInUser!
         const { oldPassword, newPassword } = req.body;
         if (!oldPassword || !newPassword) throw new badRequestException('Old and new password are required');
@@ -196,24 +217,10 @@ class profileService {
         await existingUser.save()
         res.json(successResponse('Password updated successfully', 200))
     }
-    deleteFriendRequest = async (req: IRequest, res: Response) => {
-        const { user: { _id } } = req.loggedInUser!
-        const { friendRequestId } = req.body;
-        if (!friendRequestId) throw new badRequestException('Friend request ID is required');
-        const friendRequest = await this.friendShipRepo.findOneDocument({
-            _id: friendRequestId,
-            $or: [
-                { requestFromId: _id },
-                { requestToId: _id }
-            ]
-        });
-        if (!friendRequest) throw new badRequestException("Friend request not found or you're not allowed to delete it");
 
-        await friendRequest.deleteOne();
-
-        res.json(successResponse("Friend request deleted successfully", 200));
-    }
-    unfriend = async (req: IRequest, res: Response) => {
+    
+    unfriend = async (req: IRequest, res: Response) => 
+        {
         const { user: { _id } } = req.loggedInUser!;
         const { friendId } = req.body;
 
@@ -235,6 +242,25 @@ class profileService {
         res.json(successResponse("Unfriended successfully", 200));
     }
 
+    
+deleteFriendRequest = async (req: IRequest, res: Response) =>
+        {
+        const { user: { _id } } = req.loggedInUser!
+        const { friendRequestId } = req.body;
+        if (!friendRequestId) throw new badRequestException('Friend request ID is required');
+        const friendRequest = await this.friendShipRepo.findOneDocument({
+            _id: friendRequestId,
+            $or: [
+                { requestFromId: _id },
+                { requestToId: _id }
+            ]
+        });
+        if (!friendRequest) throw new badRequestException("Friend request not found or you're not allowed to delete it");
+
+        await friendRequest.deleteOne();
+
+        res.json(successResponse("Friend request deleted successfully", 200));
+    }
 }
 
 export default new profileService();
